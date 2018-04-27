@@ -1,0 +1,320 @@
+a:8:{i:0;a:7:{s:7:"cod_prj";s:3:"SIU";s:6:"versao";s:1:"1";s:7:"cod_apl";s:21:"form_u_organizaciones";s:4:"nome";s:17:"btnBuscar_onClick";s:4:"tipo";s:1:"A";s:5:"parms";s:0:"";s:6:"codigo";s:5977:"$res001 = substr({ruc}, -3);
+$reslongitud = strlen({ruc});
+if($res001 != "001") 
+	{
+		$error_message = 'El RUC debe terminar en 001.'; // Error message
+		sc_error_message($error_message);
+		sc_error_exit();
+	}
+	
+/*if($reslongitud != 13)	
+	{
+		$error_message = 'El RUC debe tener 13 dígitos.'; // Error message
+		sc_error_message($error_message);
+		sc_error_exit();
+	}*/
+
+if($res001 == "001" and $reslongitud == 13 )
+{
+	$getInfo = 'select count(*),cod_u_organizaciones from u_organizaciones where ruc_provisional ="'.{ruc}.'" and ruc_definitivo = "'.{ruc}.'"';
+	sc_lookup(rs, $getInfo);
+	if (isset({rs[0][0]}))     // Row found
+	{$codigo = {rs[0][0]};$cod_u_organizaciones_aux = {rs[0][1]};}
+	else
+	{$codigo = 0;}
+	
+	if ($codigo > 0)
+	{
+		sc_redir('form_u_organizaciones',cod_u_organizaciones=$cod_u_organizaciones_aux);
+		$error_message = 'El RUC ya se encuentra registrado.'; // Error message
+		sc_error_message($error_message);
+		
+		sc_error_exit();
+	}
+	else
+	{
+		
+		$urlWs = "http://interoperabilidad.dinardap.gob.ec:7979/interoperador?wsdl";
+		$parametros = array();
+		$parametros['login'] = "iOpaDRIeps";
+		$parametros['password'] = "6Tmq[]3ic}";
+		
+		//TRAE DATOS DE LA LIBRERIA WEBSERVICES SEPS
+		$datosSEPS = BuscarDatosSEPS(ConectarWsSEPS($urlWs,$parametros), {ruc}, 1119);
+		
+		//TRAE DATOS DE LA LIBRERIA WEBSERVICES SRI
+		$datosSRI  = BuscarDatosSRI (ConectarWsSRI ($urlWs,$parametros), {ruc}, 186);	
+		
+		EncerarControles();
+		//BloquearControles();
+		//DATOS POR DEFAULT
+		$num_socios = 0;
+		$cedula_representante_legal = '0000000000';
+		$nombre_representante_legal = 'NO TIENE REPRESENTANTE LEGAL';
+		$tipo_registro = 'MANUAL';
+		
+		{num_socios} = $num_socios;
+		{cedula_representante_legal} = $cedula_representante_legal;
+		{nombre_representante_legal} = $nombre_representante_legal;
+		{tipo_registro} = $tipo_registro;
+		
+		
+		//DATOS SEPS	
+		if($datosSEPS['ruc'] != "")
+		{	
+			$estado_org_SEPS = strtolower($datosSEPS['estado_org']);
+			$ruc_SEPS = $datosSEPS['ruc'];
+			$organizacion_SEPS = $datosSEPS['razon_social'];
+			$cod_provincia_SEPS = RetornaCodProvincia($datosSEPS['provincia']);
+			$cod_zona_SEPS = RetornaCodZona($cod_provincia_SEPS);
+			$cod_canton_SEPS = RetornaCodCanton($cod_provincia_SEPS, $datosSEPS['canton']);
+			$cod_parroquia_SEPS = RetornaCodParroquia($cod_provincia_SEPS, $cod_canton_SEPS, $datosSEPS['parroquia']);
+			$direccion_SEPS = $datosSEPS['calle'].'-'.$datosSEPS['numero'].'-'.$datosSEPS['interseccion'];
+			$email_SEPS	= $datosSEPS['correo_org'];
+			$telefono_SEPS = $datosSEPS['telefono'];
+			$nombre_representante_legal_SEPS = $datosSEPS['nombre_representante_legal_SEPS'];
+			$num_resolucion_SEPS = $datosSEPS['num_resolucion_seps'];
+			if($num_resolucion_SEPS != "")
+			{
+				$tipo_SEPS = "org";
+				$legalmente_constituida_SEPS = "si";
+				$estado_organizacion_SEPS = "legalmente_constituida";
+			}
+			/***********************************************************************/
+			$tipo_organizacion_SEPS = $datosSEPS['tipo_organizacion'];
+			$forma_org_SEPS = RetornaTipoOrganizacion($tipo_organizacion_SEPS);
+			/***********************************************************************/
+			$tipo_registro = "WEBSER";
+			
+			
+			{estado_org} = $estado_org_SEPS;
+			{ruc_definitivo} = $ruc_SEPS;
+			{ruc_provisional} = $ruc_SEPS;
+			{organizacion} = $organizacion_SEPS;
+			{cod_zona} = $cod_zona_SEPS; 
+			{cod_provincia} = $cod_provincia_SEPS;
+			{cod_canton} = $cod_canton_SEPS;
+			{cod_parroquia} = $cod_parroquia_SEPS;
+			{direccion} = $direccion_SEPS;
+			//echo "clase_org=".$datosSEPS['clase_org']."<br>";
+			{email} = $email_SEPS;
+			{telefono} = $telefono_SEPS;
+			//$fecha_registro_seps;
+			//echo "grupo_org=".$datosSEPS['grupo_org']."<br>";
+			if($nombre_representante_legal_SEPS != "")
+			{{nombre_representante_legal} = $nombre_representante_legal_SEPS;}
+			{num_resolucion} = $num_resolucion_SEPS;
+			if($num_resolucion_SEPS != "")
+			{
+				{tipo} = $tipo_SEPS;
+				{legalmente_constituida} = $legalmente_constituida_SEPS;
+				{estado_organizacion} = $estado_organizacion_SEPS;
+			}
+			
+			/***********************************************************************/
+			{forma_organizacion} = $forma_org_SEPS;
+			/***********************************************************************/
+			{tipo_registro} = $tipo_registro;
+			VisualizarBloques('on');
+		}
+		//DATOS SRI
+		if($datosSRI['persona_sociedad']!="")
+		{
+			$persona_sociedad_SRI = $datosSRI['persona_sociedad'];
+			$nombre_organizacion_SRI = $datosSRI['nombre_organizacion'];
+			$actividad_economica_SRI = $datosSRI['actividad_economica'];
+			$estado_organizacion_SRI = $datosSRI['estado_organizacion'];
+			$forma_organizacion_SRI = $datosSRI['forma_organizacion'];
+			$ubicacion_SRI = $datosSRI['ubicacion'];
+			$direccion_SRI = $datosSRI['calle'].'-'.$datosSRI['numero'].'-'.$datosSRI['interseccion'];
+			$datos = CodigoUbicacion($ubicacion_SRI);
+			$tipo_registro = "WEBSER";
+			//echo count($datos) . "****<br>";
+			if(count($datos) == 9)
+			{
+				/*$regionSRI = $datos[1];
+	$provincia = $datos[2];
+	$canton = $datos[3];
+	$parroquia = $datos[4];*/
+				$cod_provincia_SRI = $datos[5];
+				$cod_canton_SRI = $datos[6];
+				$cod_parroquia_SRI = $datos[7];
+				$cod_zona_SRI = $datos[8];
+			}
+			
+			if({organizacion} == "")
+			{{organizacion}	= $nombre_organizacion_SRI;}
+			
+			{actividad} = $actividad_economica_SRI;
+			
+			if({direccion} == "--")
+			{{direccion} = $direccion_SRI;}
+			
+			if({cod_zona} == "0")
+			{{cod_zona} = $cod_zona_SRI;}
+			
+			if({cod_provincia} == "0")
+			{{cod_provincia} = $cod_provincia_SRI;}
+			
+			if({cod_canton} == "0")
+			{{cod_canton} = $cod_canton_SRI;}
+			
+			if({cod_parroquia} == "0")
+			{{cod_parroquia} = $cod_parroquia_SRI;}
+			
+			if({tipo_registro} == "")
+			{{tipo_registro} = $tipo_registro;}
+			VisualizarBloques('on');
+		}
+	}		
+}";}i:1;a:7:{s:7:"cod_prj";s:3:"SIU";s:6:"versao";s:1:"1";s:7:"cod_apl";s:21:"form_u_organizaciones";s:4:"nome";s:12:"email_onBlur";s:4:"tipo";s:1:"A";s:5:"parms";s:0:"";s:6:"codigo";s:30:"{email} = strtolower({email});";}i:2;a:7:{s:7:"cod_prj";s:3:"SIU";s:6:"versao";s:1:"1";s:7:"cod_apl";s:21:"form_u_organizaciones";s:4:"nome";s:17:"onApplicationInit";s:4:"tipo";s:1:"E";s:5:"parms";s:0:"";s:6:"codigo";N;}i:3;a:7:{s:7:"cod_prj";s:3:"SIU";s:6:"versao";s:1:"1";s:7:"cod_apl";s:21:"form_u_organizaciones";s:4:"nome";s:14:"onBeforeUpdate";s:4:"tipo";s:1:"E";s:5:"parms";s:0:"";s:6:"codigo";N;}i:4;a:7:{s:7:"cod_prj";s:3:"SIU";s:6:"versao";s:1:"1";s:7:"cod_apl";s:21:"form_u_organizaciones";s:4:"nome";s:9:"onLoadAll";s:4:"tipo";s:1:"E";s:5:"parms";s:0:"";s:6:"codigo";s:6270:"if({ruc} != "")
+	{
+		VisualizarBloques('on');		
+	}
+else
+	{
+		VisualizarBloques('off');
+	}
+
+
+if({ruc_definitivo} != '' || {ruc_provisional} != '')
+	{
+		VisualizarBloques('on');
+		if({ruc_definitivo}  != '')
+			{{ruc} = {ruc_definitivo};}
+		else if({ruc_provisional}  != '')
+			{{ruc} = {ruc_provisional};}
+		echo "COD=".{cod_u_organizaciones}."<br>";
+		$urlWs = "http://interoperabilidad.dinardap.gob.ec:7979/interoperador?wsdl";
+		$parametros = array();
+		$parametros['login'] = "iOpaDRIeps";
+		$parametros['password'] = "6Tmq[]3ic}";
+		//TRAE DATOS DE LA LIBRERIA WEBSERVICES SRI
+		$datosSRI  = BuscarDatosSRI (ConectarWsSRI ($urlWs,$parametros), {ruc}, 186);	
+		//TRAE DATOS DE LA LIBRERIA WEBSERVICES SEPS
+		$datosSEPS = BuscarDatosSEPS(ConectarWsSEPS($urlWs,$parametros), {ruc}, 1119);
+		//EncerarControles();
+		//BloquearControles();
+		//DATOS SEPS	
+		if($datosSEPS['ruc'] != "")
+		{	
+			$estado_org_SEPS = strtolower($datosSEPS['estado_org']);
+			$ruc_SEPS = $datosSEPS['ruc'];
+			$organizacion_SEPS = $datosSEPS['razon_social'];
+			$cod_provincia_SEPS = RetornaCodProvincia($datosSEPS['provincia']);
+			$cod_zona_SEPS = RetornaCodZona($cod_provincia_SEPS);
+			$cod_canton_SEPS = RetornaCodCanton($cod_provincia_SEPS, $datosSEPS['canton']);
+			$cod_parroquia_SEPS = RetornaCodParroquia($cod_provincia_SEPS, $cod_canton_SEPS, $datosSEPS['parroquia']);
+			$direccion_SEPS = $datosSEPS['calle'].'-'.$datosSEPS['numero'].'-'.$datosSEPS['interseccion'];
+			$email_SEPS	= $datosSEPS['correo_org'];
+			$telefono_SEPS = $datosSEPS['telefono'];
+			$nombre_representante_legal_SEPS = $datosSEPS['nombre_representante_legal_SEPS'];
+			$num_resolucion_SEPS = $datosSEPS['num_resolucion_seps'];
+			if($num_resolucion_SEPS != "")
+			{
+				$tipo_SEPS = "org";
+				$legalmente_constituida_SEPS = "si";
+				$estado_organizacion_SEPS = "legalmente_constituida";
+			}
+			else
+			{
+				$tipo_SEPS = "";
+				$legalmente_constituida_SEPS = "";
+				$estado_organizacion_SEPS = "";
+			}
+			
+			/***********************************************************************/
+			$tipo_organizacion_SEPS = $datosSEPS['tipo_organizacion'];
+			//echo "tipo_organizacion_SEPS=".$tipo_organizacion_SEPS."<br>";
+			if($tipo_organizacion_SEPS!= "")
+			{$forma_org_SEPS = RetornaTipoOrganizacion($tipo_organizacion_SEPS);}
+			else{$forma_org_SEPS = -1;}
+			/***********************************************************************/
+			$tipo_registro = "WEBSER";
+			
+			if($estado_org_SEPS != ""){{estado_org} = $estado_org_SEPS;}
+			if($ruc_SEPS != ""){{ruc_definitivo} = $ruc_SEPS;}
+			if($ruc_SEPS != ""){{ruc_provisional} = $ruc_SEPS;}
+			if($organizacion_SEPS != ""){{organizacion} = $organizacion_SEPS;}
+			if($cod_zona_SEPS != ""){{cod_zona} = $cod_zona_SEPS;}
+			if($cod_provincia_SEPS != ""){{cod_provincia} = $cod_provincia_SEPS;}
+			if($cod_canton_SEPS != ""){{cod_canton} = $cod_canton_SEPS;}
+			if($cod_parroquia_SEPS != ""){{cod_parroquia} = $cod_parroquia_SEPS;}
+			if($direccion_SEPS != ""){{direccion} = $direccion_SEPS;}
+			//echo "clase_org=".$datosSEPS['clase_org']."<br>";
+			//echo "email_SEPS=".$email_SEPS."<br>";
+			//echo "email=".{email}."<br>";
+			if($email_SEPS != ""){{email} = $email_SEPS;}
+			//echo "telefono_SEPS=".$telefono_SEPS."<br>";
+			//echo "telefono=".{telefono}."<br>";
+			if($telefono_SEPS != ""){{telefono} = $telefono_SEPS;}
+			//$fecha_registro_seps;
+			//echo "grupo_org=".$datosSEPS['grupo_org']."<br>";
+			if($nombre_representante_legal_SEPS != "")
+			{{nombre_representante_legal} = $nombre_representante_legal_SEPS;}
+			if($num_resolucion_SEPS != ""){{num_resolucion} = $num_resolucion_SEPS;}
+			//echo "num_resolucion_SEPS=".$num_resolucion_SEPS."<br>";
+			if($num_resolucion_SEPS != "" or {num_resolucion}!= "")
+			{
+				//echo "tipo_SEPS=".$tipo_SEPS."<br>";
+				//echo "tipo=".{tipo}."<br>";
+				if($tipo_SEPS!=""){{tipo} = $tipo_SEPS;}
+				if($legalmente_constituida_SEPS!=""){{legalmente_constituida} = $legalmente_constituida_SEPS;}
+				if($estado_organizacion_SEPS!=""){{estado_organizacion} = $estado_organizacion_SEPS;}
+			}
+			//echo "forma_org_SEPS=".$forma_org_SEPS."<br>";
+			//echo "forma_organizacion=".{forma_organizacion}."<br>";
+			/***********************************************************************/
+			if($forma_org_SEPS != "-1"){{forma_organizacion} = $forma_org_SEPS;}
+			/***********************************************************************/
+			if({tipo_registro} != ""){{tipo_registro} = $tipo_registro;}
+		}
+		//DATOS SRI
+		if($datosSRI['persona_sociedad']!="")
+		{
+			$persona_sociedad_SRI = $datosSRI['persona_sociedad'];
+			$nombre_organizacion_SRI = $datosSRI['nombre_organizacion'];
+			$actividad_economica_SRI = $datosSRI['actividad_economica'];
+			$estado_organizacion_SRI = $datosSRI['estado_organizacion'];
+			$forma_organizacion_SRI = $datosSRI['forma_organizacion'];
+			$ubicacion_SRI = $datosSRI['ubicacion'];
+			$direccion_SRI = $datosSRI['calle'].'-'.$datosSRI['numero'].'-'.$datosSRI['interseccion'];
+			$datos = CodigoUbicacion($ubicacion_SRI);
+			$tipo_registro = "WEBSER";
+			//echo count($datos) . "****<br>";
+			if(count($datos) == 9)
+			{
+				/*$regionSRI = $datos[1];
+				$provincia = $datos[2];
+				$canton = $datos[3];
+				$parroquia = $datos[4];*/
+				$cod_provincia_SRI = $datos[5];
+				$cod_canton_SRI = $datos[6];
+				$cod_parroquia_SRI = $datos[7];
+				$cod_zona_SRI = $datos[8];
+			}
+						
+			if({organizacion} == "" and $nombre_organizacion_SRI != "")
+				{{organizacion}	= $nombre_organizacion_SRI;}
+			
+			{actividad} = $actividad_economica_SRI;
+					
+			if({direccion} == "--" and $direccion_SRI != "")
+				{{direccion} = $direccion_SRI;}
+				
+			if({cod_zona} == "0" and $cod_zona_SRI != "")
+				{{cod_zona} = $cod_zona_SRI;}
+			
+			if({cod_provincia} == "0" and $cod_provincia_SRI !="")
+				{{cod_provincia} = $cod_provincia_SRI;}
+			
+			if({cod_canton} == "0" and $cod_canton_SRI !="")
+				{{cod_canton} = $cod_canton_SRI;}
+			
+			if({cod_parroquia} == "0" and $cod_parroquia_SRI !="")
+				{{cod_parroquia} = $cod_parroquia_SRI;}
+			
+			if({tipo_registro} == "" and $tipo_registro !="")
+			{{tipo_registro} = $tipo_registro;}
+		}
+	}";}i:5;a:7:{s:7:"cod_prj";s:3:"SIU";s:6:"versao";s:1:"1";s:7:"cod_apl";s:21:"form_u_organizaciones";s:4:"nome";s:10:"onValidate";s:4:"tipo";s:1:"E";s:5:"parms";s:0:"";s:6:"codigo";s:0:"";}i:6;a:7:{s:7:"cod_prj";s:3:"SIU";s:6:"versao";s:1:"1";s:7:"cod_apl";s:21:"form_u_organizaciones";s:4:"nome";s:17:"onValidateFailure";s:4:"tipo";s:1:"E";s:5:"parms";s:0:"";s:6:"codigo";s:0:"";}i:7;a:7:{s:7:"cod_prj";s:3:"SIU";s:6:"versao";s:1:"1";s:7:"cod_apl";s:21:"form_u_organizaciones";s:4:"nome";s:17:"onValidateSuccess";s:4:"tipo";s:1:"E";s:5:"parms";s:0:"";s:6:"codigo";s:0:"";}}

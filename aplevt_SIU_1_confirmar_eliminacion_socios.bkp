@@ -1,0 +1,40 @@
+a:3:{i:0;a:7:{s:7:"cod_prj";s:3:"SIU";s:6:"versao";s:1:"1";s:7:"cod_apl";s:28:"confirmar_eliminacion_socios";s:4:"nome";s:6:"onInit";s:4:"tipo";s:1:"E";s:5:"parms";s:0:"";s:6:"codigo";s:20:"//control_session();";}i:1;a:7:{s:7:"cod_prj";s:3:"SIU";s:6:"versao";s:1:"1";s:7:"cod_apl";s:28:"confirmar_eliminacion_socios";s:4:"nome";s:9:"onLoadAll";s:4:"tipo";s:1:"E";s:5:"parms";s:0:"";s:6:"codigo";s:2121:"$cheksociosFA ="select * from eventos_socios where cod_socios = ".[cod_socio];
+$cheksociosIM ="select * from im_contratacion_servicios_socios where cod_socios = ".[cod_socio];
+$cheksociosFP ="select * from fp_asesoria_asistencia_cofinanciamiento_socios where cod_socios = ".[cod_socio];
+
+//echo "FA=".$cheksociosFA."<br>IM=".$cheksociosIM."<br>FP=".$cheksociosFP."<br>";
+/***************************************************************************************************************/
+/**************************************FORTALECIMIENTO DE ACTORES***********************************************/
+	$cheksociosFA ="select count(*) from eventos_socios where cod_socios = ".[cod_socio];
+	sc_lookup(rs, $cheksociosFA);
+	if (isset({rs[0][0]}))     // Row found
+		{$sociosFA = {rs[0][0]};}
+
+/**************************************INTERCAMBIO Y MERCADOS***********************************************/
+	$cheksociosIM ="select count(*) from im_contratacion_servicios_socios where cod_socios = ".[cod_socio];
+	sc_lookup(rs, $cheksociosIM);
+	if (isset({rs[0][0]}))     // Row found
+		{$sociosIM = {rs[0][0]};}
+
+/**************************************FOMENTO PRODUCTIVO***********************************************/
+	$cheksociosFP ="select count(*) from fp_asesoria_asistencia_cofinanciamiento_socios where cod_socios = ".[cod_socio];
+	sc_lookup(rs, $cheksociosFP);
+	if (isset({rs[0][0]}))     // Row found
+		{$sociosFP = {rs[0][0]};}
+
+
+/*VALIDAR SI EL SOCIO TIENE EVENTOS REGISTRADO EN FORTALECIMIENTO DE ACTORES, INTERCAMBIO Y MERCADOS Y FOMENTO PRODUCTIVO*/
+	if($sociosFA > 0 or $sociosIM > 0 or $sociosFP > 0)
+	{		
+		$redir_app    = 'grid_eventos_socios';  // Application name
+		$redir_target = '_self';  // Target window (_blank, _self, _parent or modal)
+		$redir_param  = array('cod_socios_aux' => [cod_socio],'cod_u_organizaciones'=> [cod_u_organizaciones_aux]);
+		sc_redir($redir_app, $redir_param, $redir_target);
+		
+	}
+	else
+	{
+		{txt_Mensaje} = "¿Está segur@ de eliminar el soci@?<br>";
+	    sc_field_display({txt_Detalles}, 'off');
+		sc_btn_display('btn_confirmar', 'on');
+	}";}i:2;a:7:{s:7:"cod_prj";s:3:"SIU";s:6:"versao";s:1:"1";s:7:"cod_apl";s:28:"confirmar_eliminacion_socios";s:4:"nome";s:10:"onValidate";s:4:"tipo";s:1:"E";s:5:"parms";s:0:"";s:6:"codigo";s:0:"";}}

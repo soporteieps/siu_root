@@ -1,0 +1,24 @@
+v7
+ScriptCase Backup
+20180427131617
+2
+start>>>
+sc_tbrep__@BKP@__preinscripcion_SV__@BKP@__DD_Socio_Vulcanizador
+sc_tbprj__@BKP@__SIU
+sc_tbversao__@BKP@__SIU__@BKP@__1
+sc_tbusu__@BKP@__admin
+sc_tbusu__@BKP@__logica
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__cambiar_contrasena
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__confirmar_eliminacion_socios
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__control_usuarios
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__form_sec_users
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__form_sec_users_groups
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__form_socios
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__form_u_organizaciones
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__grid_eventos_socios
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__grid_u_organizaciones
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__listado_socios
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__menu
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__reconexionWS
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__salir
+sc_tbapl__@BKP@__SIU__@BKP@__1__@BKP@__salir_socios
